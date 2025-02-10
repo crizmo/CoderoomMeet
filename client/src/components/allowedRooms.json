@@ -1,0 +1,39 @@
+{
+  "bheri": [
+    { "username": "anish", "password": "anish" },
+    { "username": "rohit", "password": "rohit" },
+    { "username": "yashaswini", "password": "yashaswini" },
+    { "username": "kousik", "password": "kousik" },
+    { "username": "mohan", "password": "mohan" },
+    { "username": "tejas", "password": "tejas" },
+    { "username": "avinash", "password": "avinash" },
+    { "username": "rahul", "password": "rahul" },
+    { "username": "ravi", "password": "ravi" },
+    { "username": "trupti ", "password": "trupti" },
+
+    { "username": "doctor", "password": "doctor" },
+    { "username": "p1_m", "password": "p1_m" },
+    { "username": "p1_bed", "password": "p1_bed" },
+    { "username": "admin", "password": "123@admin" }
+  ],
+
+  "test1": [
+    { "username": "anish", "password": "anish" },
+    { "username": "tejas", "password": "tejas" },
+    { "username": "admin", "password": "123@admin" },
+    { "username": "ocr", "password": "ocr" },
+    { "username": "doc", "password": "doc" },
+    { "username": "d1", "password": "d1" },
+    { "username": "d2", "password": "d2" },
+    { "username": "d3", "password": "d3" },
+    { "username": "d4", "password": "d4" },
+    { "username": "p1_bed", "password": "p1_bed" },
+    { "username": "p1_monitor", "password": "p1_monitor" },
+    { "username": "p2_bed", "password": "p2_bed" },
+    { "username": "p2_monitor", "password": "p2_monitor" },
+    { "username": "ankita", "password": "ankita" },
+    { "username": "student", "password": "student" },
+    { "username": "instructor", "password": "instructor" }
+
+  ]
+}
