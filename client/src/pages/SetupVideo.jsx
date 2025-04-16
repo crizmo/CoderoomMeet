@@ -52,6 +52,9 @@ const SetupVideo = ({
                     ref={localVideoref}
                     autoPlay
                     muted
+                    playsInline
+                    webkit-playsinline
+                    controls={false}
                     style={{
                         border: "1px solid #bdbdbd",
                         objectFit: "cover",
@@ -142,6 +145,16 @@ const SetupVideo = ({
                     backgroundColor: "#f5f5f5",
                 }}
             >
+                <Typography
+                    sx={{
+                        margin: 0,
+                        fontWeight: "bold",
+                        fontSize: isMobile ? "14px" : "18px",
+                        textAlign: "center",
+                    }}
+                >
+                    Coderoom : Mentor Session
+                </Typography>
                 <Typography sx={{ margin: 0, fontWeight: "bold", fontSize: isMobile ? "14px" : "18px" }}>
                     Login Status: {login ? 'Logged In' : 'Not Logged In'}
                 </Typography>

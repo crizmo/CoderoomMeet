@@ -7,6 +7,9 @@ import {
 	useMediaQuery
 } from '@mui/material';
 
+import Popup from 'reactjs-popup';
+import 'reactjs-popup/dist/index.css';
+
 import {
 	Mic as MicIcon,
 	MicOff as MicOffIcon,
@@ -45,7 +48,16 @@ import {
 
 import SetupVideo from './SetupVideo';
 
+import tesseract from 'tesseract.js';
+
 import peerConnectionConfig from '../methods/peerConnectionConfig';
+
+import * as posenet from '@tensorflow-models/posenet';
+import '@tensorflow/tfjs';
+
+import { drawKeypoints, drawSkeleton } from "../methods/utilities"
+
+import VitalsChart from '../components/VitalsChart';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
 const server_url = process.env.NODE_ENV === 'production' ? serverUrl : serverUrl;
@@ -81,8 +93,7 @@ let streams = [{
 // const mediaSource = new MediaSource();
 // mediaSource.addEventListener('sourceopen', handleSourceOpen(event, streams, sourceBuffer, mediaSource), false);
 
-
-const MeetFuc = ({ login, username }) => {
+const VideoFuc = ({ login, username }) => {
 	const localVideoref = React.useRef(null);
 	const canvasRef = React.useRef(null);
 
@@ -96,7 +107,143 @@ const MeetFuc = ({ login, username }) => {
 
 	const [cameraList, setCameraList] = useState([]);
 	const [selectedCamera, setSelectedCamera] = useState('');
+	const [screenAvailable, setScreenAvailable] = useState(false);
 	const [connect, setConnect] = useState(true);
+
+	const [ocr, setOcr] = useState(false)
+	const [intervalId, setIntervalId] = useState(null);
+
+	const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+	const handleVitalsClick = () => {
+		setIsPopupOpen(true);
+	};
+
+	const detectWebcamFeed = async (posenet_model) => {
+		if (localVideoref.current) {
+			const video = localVideoref.current;
+			console.log(video);
+			console.log("Video Ready");
+			if (video.readyState === 4) { // Ensure the video is ready
+				const videoWidth = video.videoWidth;
+				const videoHeight = video.videoHeight;
+				// Set video width
+				video.width = videoWidth;
+				video.height = videoHeight;
+				// Make Estimation
+				const pose = await posenet_model.estimateSinglePose(video);
+				console.log(pose);
+				drawResult(pose, video, videoWidth, videoHeight, canvasRef);
+
+				// Emit the posenet data to the server
+				let socketId = socket.id;
+				socket.emit('posenetData', { pose, socketId });
+			}
+		}
+	};
+
+	const runPosenet = async () => {
+		const posenet_model = await posenet.load({
+			inputResolution: { width: 640, height: 480 },
+			scale: 0.8
+		});
+		console.log("Posenet Model Loaded");
+		const id = setInterval(() => {
+			detectWebcamFeed(posenet_model);
+		}, 700);
+		setIntervalId(id);
+	};
+
+	const drawResult = (pose, video, videoWidth, videoHeight, canvas) => {
+		const ctx = canvas.current.getContext("2d");
+		canvas.current.width = videoWidth;
+		canvas.current.height = videoHeight;
+		drawKeypoints(pose["keypoints"], 0.6, ctx);
+		drawSkeleton(pose["keypoints"], 0.7, ctx);
+		console.log("Drawing Pose");
+	};
+
+	const showPose = () => {
+		if (intervalId) {
+			clearInterval(intervalId);
+			setIntervalId(null);
+			console.log("Posenet Stopped");
+
+			// Clear the local canvas
+			const ctx = canvasRef.current.getContext("2d");
+			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+			// Emit an event to the server to notify other users
+			socket.emit('stopPosenet', { socketId: socket.id });
+		} else {
+			runPosenet();
+		}
+	};
+
+	useEffect(() => {
+		socket.on('posenetData', (data) => {
+			const { pose, socketId } = data;
+			console.log("Received PoseNet Data", pose, socketId);
+			console.log("socketId", socketId);
+
+			let canvas = document.getElementsByClassName(`client-canvas-${socketId}`)[0];
+			console.log("Canvas", canvas);
+
+			if (!canvas) {
+				// Create and append the canvas element if it doesn't exist
+				canvas = document.createElement('canvas');
+				canvas.style.position = "absolute";
+				canvas.style.top = 0;
+				canvas.style.left = 0;
+				canvas.style.width = "100%";
+				canvas.style.height = "100%";
+				canvas.style.zIndex = 1;
+				canvas.style.borderTopLeftRadius = "15px";
+				canvas.style.borderBottomRightRadius = "15px";
+				canvas.className = `client-canvas-${socketId}`;
+				canvas.setAttribute('data-socket', socketId);
+				document.body.appendChild(canvas); // Append to the body or appropriate container
+			}
+
+			const video = document.querySelector(`video[data-socket="${socketId}"]`);
+			console.log("Video", video);
+
+			if (video) {
+				const videoWidth = video.videoWidth;
+				const videoHeight = video.videoHeight;
+				canvas.width = videoWidth;
+				canvas.height = videoHeight;
+
+				const ctx = canvas.getContext("2d");
+				if (ctx) {
+					drawKeypoints(pose["keypoints"], 0.6, ctx);
+					drawSkeleton(pose["keypoints"], 0.7, ctx);
+					console.log("Drawing Pose for socketId:", socketId);
+				} else {
+					console.error("Failed to obtain 2D context for canvas");
+				}
+			} else {
+				console.error("Video element not found for socketId:", socketId);
+			}
+		});
+
+		socket.on('stopPosenet', (data) => {
+			const { socketId } = data;
+			console.log("Received stopPosenet event for socketId:", socketId);
+
+			// Clear the canvas for the specified socketId
+			let canvas = document.getElementsByClassName(`client-canvas-${socketId}`)[0];
+			if (canvas) {
+				const ctx = canvas.getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+			}
+		});
+
+		return () => {
+			socket.off('posenetData');
+			socket.off('stopPosenet');
+		};
+	}, []);
 
 	useEffect(() => {
 		const getPermissions = async () => {
@@ -112,6 +259,8 @@ const MeetFuc = ({ login, username }) => {
 
 				setVideo(videoAvailable ? true : false)
 				setAudio(audioAvailable ? true : false)
+
+				setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
 
 				if (permission) {
 					const cameras = await navigator.mediaDevices.enumerateDevices();
@@ -133,40 +282,40 @@ const MeetFuc = ({ login, username }) => {
 
 	const updateMediaTracks = useCallback(async (video, audio, currentCamera) => {
 		try {
-		  const videoConstraints = video
-			? {
-				width: { ideal: 1920, max: 1920 },
-				height: { ideal: 1080, max: 1080 },
-				frameRate: { ideal: 60, max: 60 },
-				deviceId: currentCamera ? { exact: currentCamera } : undefined,
-			  }
-			: false;
-	  
-		  const audioConstraints = audio ? true : false;
-	  
-		  const constraints = {
-			video: videoConstraints,
-			audio: audioConstraints,
-		  };
-	  
-		  if (video || audio) {
-			const stream = await navigator.mediaDevices.getUserMedia(constraints);
-			getUserMediaSuccess({
-			  stream,
-			  setVideo,
-			  setAudio,
-			  connections,
-			  socket,
-			  socketId,
-			  localVideoref,
-			});
-		  } else {
-			stopTracks();
-		  }
+			const videoConstraints = video
+				? {
+					width: { ideal: 1920, max: 1920 }, // Request up to 1080p resolution
+					height: { ideal: 1080, max: 1080 },
+					frameRate: { ideal: 60, max: 60 }, // Request up to 60 fps
+					deviceId: currentCamera ? { exact: currentCamera } : undefined,
+				}
+				: false;
+	
+			const audioConstraints = audio ? true : false;
+	
+			const constraints = {
+				video: videoConstraints,
+				audio: audioConstraints,
+			};
+	
+			if (video || audio) {
+				const stream = await navigator.mediaDevices.getUserMedia(constraints);
+				getUserMediaSuccess({
+					stream,
+					setVideo,
+					setAudio,
+					connections,
+					socket,
+					socketId,
+					localVideoref,
+				});
+			} else {
+				stopTracks();
+			}
 		} catch (e) {
-		  console.error('Error updating media tracks:', e);
+			console.log(e);
 		}
-	  }, []);
+	}, []);
 
 	const stopTracks = useCallback(() => {
 		try {
@@ -181,7 +330,7 @@ const MeetFuc = ({ login, username }) => {
 				if (id === socketId) continue;
 
 				// connections[id].addStream(window.localStream);
-				window.localStream.getTracks().forEach((track) => connections[id].addTrack(track, window.localStream));
+				window.localStream.getTracks().forEach(track => connections[id].addTrack(track, window.localStream));
 
 				connections[id]
 					.createOffer()
@@ -196,6 +345,37 @@ const MeetFuc = ({ login, username }) => {
 		}
 	}, []);
 
+
+	const startOCR = useCallback(() => {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+
+		canvas.width = localVideoref.current.videoWidth;
+		canvas.height = localVideoref.current.videoHeight;
+
+		ctx.drawImage(localVideoref.current, 0, 0, canvas.width, canvas.height);
+
+		tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) })
+			.then(({ data: { text } }) => {
+				console.log(text);
+			});
+	}, []);
+
+	useEffect(() => {
+		if (ocr) {
+			const interval = setInterval(() => {
+				startOCR();
+			}, 5000);
+
+			return () => clearInterval(interval);
+		} else {
+			console.log("OCR Turned Off");
+		}
+	}, [ocr, startOCR]);
+
+	const handleOcr = useCallback(() => {
+		setOcr(prevOcr => !prevOcr);
+	}, []);
 
 	const gotMessageFromServer = (fromId, message) => {
 		var signal = JSON.parse(message)
@@ -231,6 +411,104 @@ const MeetFuc = ({ login, username }) => {
 			console.log("Connected to socket server")
 			socket.emit('join-call', window.location.href, username)
 			socketId = socket.id
+
+			socket.on('globalData', (data) => {
+				console.log("Received global data", data);
+			});
+
+			socket.on('temperature', (tempArray) => {
+
+				let usersDisplay = document.querySelectorAll('.videoWrapper');
+				usersDisplay.forEach((user) => {
+					let userId = user.id;
+					tempArray.forEach((temp) => {
+						if (temp.id === userId) {
+							let idDisplay = user.querySelector('div');
+							idDisplay.innerText = `${temp.username.charAt(0).toUpperCase() + temp.username.slice(1)} Temperature : ${temp.temp}°C`
+						}
+					})
+				})
+
+				let localVideoDisplay = document.querySelector('.localVideoDisplay');
+				tempArray.forEach((temp) => {
+					if (temp.id === socketId) {
+						localVideoDisplay.innerText = `${temp.username.charAt(0).toUpperCase() + temp.username.slice(1)} Temperature : ${temp.temp}°C`
+					}
+				})
+
+			})
+
+			socket.on('vitals', (vitalsArray) => {
+
+				let usersDisplay = document.querySelectorAll('.videoWrapper');
+				usersDisplay.forEach((user) => {
+					let userId = user.id;
+					vitalsArray.forEach((vital) => {
+						if (vital.id === userId) {
+							let vitalsDisplay = user.querySelector('.vitals-display');
+							if (!vitalsDisplay) {
+								vitalsDisplay = document.createElement('div');
+								vitalsDisplay.className = 'vitals-display';
+								vitalsDisplay.style.cursor = 'pointer';
+								vitalsDisplay.zIndex = 3;
+								// if the the user clicks on the vitals display, then open a pop with VitalChart component 
+								// which will show the vitals chart of the user , use PopUp component from reactjs-popup library when i click on the vitals display div
+								// vitalsDisplay.onclick = () => {
+								// 	handleVitalsClick();
+								// }
+
+
+								user.insertBefore(vitalsDisplay, user.firstChild);
+							}
+
+							const heartRate = (vital.pulse != null && !isNaN(vital.pulse)) ?
+								`Heart Rate: ${vital.pulse} BPM` : 'Heart Rate: --';
+							const leftRR = (vital.left_rr != null && !isNaN(vital.left_rr)) ?
+								`Left Nostril RR: ${vital.left_rr}` : 'Left Nostril RR: --';
+							const rightRR = (vital.right_rr != null && !isNaN(vital.right_rr)) ?
+								`Right Nostril RR: ${vital.right_rr}` : 'Right Nostril RR: --';
+
+							vitalsDisplay.innerText = `${vital.username.charAt(0).toUpperCase() + vital.username.slice(1)}
+								${heartRate}
+								${leftRR}
+								${rightRR}`;
+						}
+					});
+				});
+
+				const localWrapper = document.querySelector('.localVideoWrapper');
+				if (localWrapper) {
+					vitalsArray.forEach((vital) => {
+						if (vital.id === socketId) {
+							let vitalsDisplay = localWrapper.querySelector('.vitals-display');
+							if (!vitalsDisplay) {
+								vitalsDisplay = document.createElement('div');
+								vitalsDisplay.className = 'vitals-display';
+								vitalsDisplay.style.cursor = 'pointer';
+								vitalsDisplay.zIndex = 4;
+								// vitalsDisplay.onclick = () => {
+								// 	handleVitalsClick();
+								// }
+								localWrapper.insertBefore(vitalsDisplay, localWrapper.firstChild);
+							}
+
+							const heartRate = (vital.pulse != null && !isNaN(vital.pulse)) ?
+								`Heart Rate: ${vital.pulse} BPM` : 'Heart Rate: --';
+							const leftRR = (vital.left_rr != null && !isNaN(vital.left_rr)) ?
+								`Left Nostril RR: ${vital.left_rr}` : 'Left Nostril RR: --';
+							const rightRR = (vital.right_rr != null && !isNaN(vital.right_rr)) ?
+								`Right Nostril RR: ${vital.right_rr}` : 'Right Nostril RR: --';
+
+							vitalsDisplay.innerText = `${vital.username.charAt(0).toUpperCase() + vital.username.slice(1)}
+								${heartRate}
+								${leftRR}
+								${rightRR}`;
+
+
+						}
+					});
+				}
+			});
 
 			let main = document.getElementById('main')
 			changeCssVideos({ main, elms });
@@ -341,7 +619,6 @@ const MeetFuc = ({ login, username }) => {
 							video.setAttribute('webkit-playsinline', true);
 							video.setAttribute('controls', false);
 							video.controls = false;
-							video.srcObject = stream;
 					
 							canvasArray.push({
 								username: connectionsWithNames[socketListId],
@@ -526,6 +803,12 @@ const MeetFuc = ({ login, username }) => {
 											alignItems: "center",
 											width: "100%"
 										}}>
+											{username === "ocr" && (
+												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleOcr}>
+													<CenterFocusWeakIcon />
+												</IconButton>
+											)}
+
 											<div style={{ display: "flex", alignItems: "center" }}>
 												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleAudio}>
 													{audio ? <MicIcon /> : <MicOffIcon />}
@@ -534,6 +817,12 @@ const MeetFuc = ({ login, username }) => {
 												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleVideo}>
 													{video ? <VideocamIcon /> : <VideocamOffIcon />}
 												</IconButton>
+
+												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={() => { showPose() }}>
+													<VisibilityIcon />
+												</IconButton>
+
+												{/* share posenet buttn */}
 
 
 												{username === "admin" && (
@@ -603,6 +892,26 @@ const MeetFuc = ({ login, username }) => {
 											)}
 										</div>
 									</div>
+									{isPopupOpen && (
+										<Popup
+										open={isPopupOpen}
+										onClose={() => setIsPopupOpen(false)}
+										position="right center"
+										modal
+										contentStyle={{
+										  maxWidth: '90%',
+										  width: 'auto',
+										  maxHeight: '80%',
+										  overflow: 'auto',
+										  padding: '20px',
+										  backgroundColor: '#202124',
+										  borderRadius: '10px',
+										  color: 'white'
+										}}
+									  >
+											<VitalsChart socket={socket} room={room} username={username} />
+										</Popup>
+									)}
 									<div className="container">
 										<Row id="main" className="flex-container"
 											style={{
@@ -677,7 +986,10 @@ const MeetFuc = ({ login, username }) => {
 				) : (
 					<div className="container2">
 						{(
+							// console.log("Redirecting to Home")
+							//redirect to home
 							window.location.href = "/"
+
 						)}
 					</div>
 				)}
@@ -686,4 +998,4 @@ const MeetFuc = ({ login, username }) => {
 	);
 };
 
-export default MeetFuc;
+export default VideoFuc;

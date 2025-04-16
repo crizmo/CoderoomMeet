@@ -19,7 +19,7 @@ const io = socketIo(server, {
         credentials: true
     },
     allowEIO3: true,
-    path: '/coderoom/socket.io'
+    path: '/samiksha/socket.io'
 });
 
 handleSocketConnection(io, connectionJson);

@@ -17,7 +17,7 @@ const handleRequest = (io) => (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathParts = url.pathname.split('/').filter(Boolean);
 
-    if (pathParts.length === 4 && pathParts[0] === 'coderoom') {
+    if (pathParts.length === 4 && pathParts[0] === 'samiksha') {
         const [_, room, username, endpoint] = pathParts;
         if (endpoint === 'vitals') {
             handleVitals(req, res, room, username);
@@ -25,11 +25,11 @@ const handleRequest = (io) => (req, res) => {
         }
     }
 
-    if (req.url === '/coderoom/' && req.method === 'GET') {
+    if (req.url === '/samiksha/' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('Server is working');
-    } else if (req.url.startsWith('/coderoom') && req.method === 'GET') {
-        const filePath = path.join(__dirname, 'public', req.url.replace('/coderoom', ''));
+    } else if (req.url.startsWith('/samiksha') && req.method === 'GET') {
+        const filePath = path.join(__dirname, 'public', req.url.replace('/samiksha', ''));
         fs.readFile(filePath, (err, data) => {
             if (err) {
                 res.writeHead(404, { 'Content-Type': 'text/plain' });

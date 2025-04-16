@@ -136,7 +136,7 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 								px: 1
 							}}
 						>
-							Join a room to start coding with your friends / Mentors 
+							Join a room to start your session
 						</Typography>
 					</Box>
 
@@ -194,6 +194,26 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 								alignItems: 'center'
 							}}
 						>
+							{/* 
+							DO NOT
+							<Button
+								type="button"
+								fullWidth
+								variant="contained"
+								color="primary"
+								sx={{
+									mt: 2,
+									mb: 2,
+									py: 1.5,
+									borderRadius: 2,
+									textTransform: 'none',
+									fontWeight: 'bold'
+								}}
+								onClick={() => handleJoin('device')}
+							>
+								Connect to Device
+							</Button> 
+							*/}
 							<Button
 								type="button"
 								fullWidth

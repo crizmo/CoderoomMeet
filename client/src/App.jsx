@@ -1,7 +1,9 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import VideoFuc from './pages/VideoFuc';
 import MeetFuc from './pages/MeetFuc';
 import Home from './pages/Home';
+import VitalsChart from './components/VitalsChart';
 import { useState } from 'react';
 
 const App = () => {
@@ -24,6 +26,8 @@ const App = () => {
             path="/"
             element={<Home onLoginSet={handleLoginSet} onUsernameSet={handleUsernameSet} />}
           />
+          <Route path="/:room/:username/charts" element={<VitalsChart />} />
+          <Route path="/device/:url" element={<VideoFuc login={login} username={username} />} />
           <Route path="/meet/:url" element={<MeetFuc login={login} username={username} />} />
         </Routes>
       </Router>

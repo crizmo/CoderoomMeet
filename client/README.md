@@ -11,8 +11,8 @@
 2. **Backend Server** (`app.js`)
    - Node.js server running on port 8501
    - Handles HTTP requests and WebSocket connections
-   - Routes: `/coderoom/{room}/{username}/vitals`
-   - WebSocket path: `/coderoom/socket.io`
+   - Routes: `/samiksha/{room}/{username}/vitals`
+   - WebSocket path: `/samiksha/socket.io`
 
 3. **Frontend Application** (`VitalsChart.jsx`, `VideoFuc.jsx`)
    - React application running on port 5173
@@ -37,7 +37,7 @@
 2. **Server Communication**
    ```javascript
    // app.js (Backend)
-   app.post('/coderoom/:room/:username/vitals', (req, res) => {
+   app.post('/samiksha/:room/:username/vitals', (req, res) => {
        const { room, username } = req.params;
        const vitals = req.body;
        
@@ -69,7 +69,7 @@
 ## Communication Flow
 1. **Data Generation & Sending**
    - Simulation script generates data every 50ms
-   - Sends HTTP POST to: `http://localhost:8501/coderoom/{room}/{username}/vitals`
+   - Sends HTTP POST to: `http://localhost:8501/samiksha/{room}/{username}/vitals`
 
 2. **Server Processing**
    - Backend receives POST request
@@ -114,9 +114,9 @@
 1. **Backend URL**
    ```python
    # Local development
-   SERVER_URL = "http://localhost:8501/coderoom"
+   SERVER_URL = "http://localhost:8501/samiksha"
    # Production
-   SERVER_URL = "https://project.iith.ac.in/coderoom"
+   SERVER_URL = "https://project.iith.ac.in/samiksha"
    ```
 
 2. **Sampling Rates**

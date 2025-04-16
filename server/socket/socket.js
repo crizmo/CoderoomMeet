@@ -10,16 +10,16 @@ let timeOnline = {};
 const feedEmitter = new EventEmitter();
 
 const handleSocketConnection = (io, connectionJson) => {
-    const coderoomNamespace = io.of('/coderoom');
+    const samikshaNamespace = io.of('/samiksha');
 
     console.log('Connection information:', connections);
     // Listen for feed data and emit it to the room
     feedEmitter.on('feed', (bed, id, data) => {
         console.log(`Socket : Received feed data for bed ${bed} and id ${id}:`, data.length);
-        coderoomNamespace.emit(`feed-${bed}`, { id, data });
+        samikshaNamespace.emit(`feed-${bed}`, { id, data });
     });
 
-    coderoomNamespace.on('connection', (socket) => {
+    samikshaNamespace.on('connection', (socket) => {
         console.log('New client connected', socket.id);
 
         socket.on('join-call', (path, username) => {
@@ -38,7 +38,7 @@ const handleSocketConnection = (io, connectionJson) => {
             timeOnline[socket.id] = new Date();
 
             for (let a = 0; a < connections[path].length; ++a) {
-                coderoomNamespace.to(connections[path][a]).emit("user-joined", socket.id, connections[path], connectionsWithNames);
+                samikshaNamespace.to(connections[path][a]).emit("user-joined", socket.id, connections[path], connectionsWithNames);
             }
 
             setInterval(() => {
@@ -68,13 +68,13 @@ const handleSocketConnection = (io, connectionJson) => {
                 });
 
                 connections[path].forEach(id => {
-                    coderoomNamespace.to(id).emit("vitals", vitalsArray);
+                    samikshaNamespace.to(id).emit("vitals", vitalsArray);
                 });
             }, 1000);
 
             if (messages[path] !== undefined) {
                 for (let a = 0; a < messages[path].length; ++a) {
-                    coderoomNamespace.to(socket.id).emit("chat-message", messages[path][a]['data'],
+                    samikshaNamespace.to(socket.id).emit("chat-message", messages[path][a]['data'],
                         messages[path][a]['sender'], messages[path][a]['socket-id-sender']);
                 }
             }
@@ -83,20 +83,20 @@ const handleSocketConnection = (io, connectionJson) => {
         });
 
         socket.on('signal', (toId, message) => {
-            coderoomNamespace.to(toId).emit('signal', socket.id, message);
+            samikshaNamespace.to(toId).emit('signal', socket.id, message);
         });
 
         socket.on('globalData', (data) => {
-            coderoomNamespace.emit('globalData', data);
+            samikshaNamespace.emit('globalData', data);
         });
 
         socket.on('posenetData', (data) => {
-            coderoomNamespace.emit('posenetData', data);
+            samikshaNamespace.emit('posenetData', data);
         });
 
         socket.on('stopPosenet', (data) => {
             const { socketId } = data;
-            coderoomNamespace.emit('stopPosenet', { socketId });
+            samikshaNamespace.emit('stopPosenet', { socketId });
         });
 
         socket.on('chat-message', (data, sender) => {
@@ -121,7 +121,7 @@ const handleSocketConnection = (io, connectionJson) => {
                 messages[key].push({ "sender": sender, "data": data, "socket-id-sender": socket.id });
 
                 for (let a = 0; a < connections[key].length; ++a) {
-                    coderoomNamespace.to(connections[key][a]).emit("chat-message", data, sender, socket.id);
+                    samikshaNamespace.to(connections[key][a]).emit("chat-message", data, sender, socket.id);
                 }
             }
 
@@ -137,7 +137,7 @@ const handleSocketConnection = (io, connectionJson) => {
                         key = k;
 
                         for (let a = 0; a < connections[key].length; ++a) {
-                            coderoomNamespace.to(connections[key][a]).emit("user-left", socket.id);
+                            samikshaNamespace.to(connections[key][a]).emit("user-left", socket.id);
                         }
 
                         var index = connections[key].indexOf(socket.id);
