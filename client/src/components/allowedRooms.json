@@ -20,6 +20,8 @@
   "test1": [
     { "username": "anish", "password": "anish" },
     { "username": "tejas", "password": "tejas" },
+    { "username": "kaustubh", "password": "kaustubh" },
+    { "username": "bhumi", "password": "bhumi" },
     { "username": "admin", "password": "123@admin" },
     { "username": "ocr", "password": "ocr" },
     { "username": "doc", "password": "doc" },
