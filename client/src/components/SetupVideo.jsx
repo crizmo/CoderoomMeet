@@ -156,18 +156,6 @@ const SetupVideo = ({
                     backgroundColor: "#f5f5f5",
                 }}
             >
-                {/* Add logo */}
-                <img 
-                    src={logoImage} 
-                    alt="Yoga Vigyan Logo" 
-                    style={{
-                        width: isMobile ? '150px' : '200px',
-                        height: 'auto',
-                        borderRadius: '10px',
-                        marginBottom: '20px'
-                    }} 
-                />
-
                 <Typography sx={{ margin: 0, fontWeight: "bold", fontSize: isMobile ? "14px" : "18px" }}>
                     Login Status: {login ? 'Logged In' : 'Not Logged In'}
                 </Typography>
