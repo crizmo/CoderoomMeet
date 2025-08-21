@@ -14,8 +14,6 @@ import {
 import { blue, green } from '@mui/material/colors';
 import { useTheme } from '@mui/material/styles';
 import allowedRooms from './allowedRooms.json';
-// import logoImage from '../assets/logo.jpg';
-import logoImage from '../assets/logo1.png';
 
 // Create a custom theme
 const theme = createTheme({
@@ -132,16 +130,6 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 							textAlign: 'center'
 						}}
 					>
-						<img 
-							src={logoImage} 
-							alt="Yoga Vigyan Logo" 
-							style={{
-								width: isMobile ? 150 : 200,
-								height: 'auto',
-								borderRadius: 10,
-								marginBottom: 16
-							}} 
-						/>
 						<Typography 
 							variant={isMobile ? "h5" : "h4"} 
 							component="h1" 
@@ -151,7 +139,7 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 								marginBottom: 1
 							}}
 						>
-							Powered by BHERI
+							Coderoom Meet
 						</Typography>
 						<Typography 
 							variant={isMobile ? "subtitle2" : "subtitle1"} 
@@ -162,7 +150,7 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 								px: 1
 							}}
 						>
-							Sensor enabled Conferencing Platforms for Yoga, Dance, Skill Instructors
+							Sensor enabled Conferencing Platforms for Coderoom Teachers and Students
 						</Typography>
 					</Box>
 
