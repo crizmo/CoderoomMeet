@@ -291,14 +291,14 @@ const VideoFuc = ({ login, username }) => {
 					deviceId: currentCamera ? { exact: currentCamera } : undefined,
 				}
 				: false;
-	
+
 			const audioConstraints = audio ? true : false;
-	
+
 			const constraints = {
 				video: videoConstraints,
 				audio: audioConstraints,
 			};
-	
+
 			if (video || audio) {
 				const stream = await navigator.mediaDevices.getUserMedia(constraints);
 				getUserMediaSuccess({
@@ -699,7 +699,7 @@ const VideoFuc = ({ login, username }) => {
 	const handleSetupVideo = useCallback(() => {
 		setSetupVideo(prevSetupVideo => {
 			const newSetupVideoState = !prevSetupVideo;
-	
+
 			if (newSetupVideoState) {
 				setVideo(true);
 				navigator.mediaDevices.getUserMedia({
@@ -709,20 +709,20 @@ const VideoFuc = ({ login, username }) => {
 						frameRate: { ideal: 60, max: 60 }, // Request up to 60 fps
 					}
 				})
-				.then((stream) => {
-					window.localStream = stream;
-					localVideoref.current.srcObject = stream;
-				})
-				.catch((e) => {
-					console.error("Error accessing camera: ", e);
-				});
+					.then((stream) => {
+						window.localStream = stream;
+						localVideoref.current.srcObject = stream;
+					})
+					.catch((e) => {
+						console.error("Error accessing camera: ", e);
+					});
 			} else {
 				setVideo(false);
 				const blackSilenceStream = new MediaStream([black(), silence()]);
 				window.localStream = blackSilenceStream;
 				localVideoref.current.srcObject = blackSilenceStream;
 			}
-	
+
 			return newSetupVideoState;
 		});
 	}, []);
@@ -795,11 +795,15 @@ const VideoFuc = ({ login, username }) => {
 											alignItems: "center",
 											width: "100%"
 										}}>
-											{username === "ocr" && (
+											{/* {username === "ocr" && (
 												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleOcr}>
 													<CenterFocusWeakIcon />
 												</IconButton>
-											)}
+											)} */}
+
+											<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleOcr}>
+												<CenterFocusWeakIcon />
+											</IconButton>
 
 											<div style={{ display: "flex", alignItems: "center" }}>
 												<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleAudio}>
@@ -886,21 +890,21 @@ const VideoFuc = ({ login, username }) => {
 									</div>
 									{isPopupOpen && (
 										<Popup
-										open={isPopupOpen}
-										onClose={() => setIsPopupOpen(false)}
-										position="right center"
-										modal
-										contentStyle={{
-										  maxWidth: '90%',
-										  width: 'auto',
-										  maxHeight: '80%',
-										  overflow: 'auto',
-										  padding: '20px',
-										  backgroundColor: '#202124',
-										  borderRadius: '10px',
-										  color: 'white'
-										}}
-									  >
+											open={isPopupOpen}
+											onClose={() => setIsPopupOpen(false)}
+											position="right center"
+											modal
+											contentStyle={{
+												maxWidth: '90%',
+												width: 'auto',
+												maxHeight: '80%',
+												overflow: 'auto',
+												padding: '20px',
+												backgroundColor: '#202124',
+												borderRadius: '10px',
+												color: 'white'
+											}}
+										>
 											<VitalsChart socket={socket} room={room} username={username} />
 										</Popup>
 									)}
