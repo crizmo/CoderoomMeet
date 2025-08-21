@@ -57,7 +57,7 @@ import '@tensorflow/tfjs';
 
 import { drawKeypoints, drawSkeleton } from "../methods/utilities"
 
-import VitalsChart from '../components/VitalsChart';
+import VitalsChart from './VitalsChart';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL;
 const server_url = process.env.NODE_ENV === 'production' ? serverUrl : serverUrl;
@@ -90,8 +90,9 @@ let streams = [{
 	stream: null
 }];
 
-// const mediaSource = new MediaSource();
-// mediaSource.addEventListener('sourceopen', handleSourceOpen(event, streams, sourceBuffer, mediaSource), false);
+const mediaSource = new MediaSource();
+mediaSource.addEventListener('sourceopen', handleSourceOpen(event, streams, sourceBuffer, mediaSource), false);
+
 
 const VideoFuc = ({ login, username }) => {
 	const localVideoref = React.useRef(null);
@@ -329,8 +330,7 @@ const VideoFuc = ({ login, username }) => {
 			for (let id in connections) {
 				if (id === socketId) continue;
 
-				// connections[id].addStream(window.localStream);
-				window.localStream.getTracks().forEach(track => connections[id].addTrack(track, window.localStream));
+				connections[id].addStream(window.localStream);
 
 				connections[id]
 					.createOffer()
@@ -460,18 +460,6 @@ const VideoFuc = ({ login, username }) => {
 
 								user.insertBefore(vitalsDisplay, user.firstChild);
 							}
-
-							const heartRate = (vital.pulse != null && !isNaN(vital.pulse)) ?
-								`Heart Rate: ${vital.pulse} BPM` : 'Heart Rate: --';
-							const leftRR = (vital.left_rr != null && !isNaN(vital.left_rr)) ?
-								`Left Nostril RR: ${vital.left_rr}` : 'Left Nostril RR: --';
-							const rightRR = (vital.right_rr != null && !isNaN(vital.right_rr)) ?
-								`Right Nostril RR: ${vital.right_rr}` : 'Right Nostril RR: --';
-
-							vitalsDisplay.innerText = `${vital.username.charAt(0).toUpperCase() + vital.username.slice(1)}
-								${heartRate}
-								${leftRR}
-								${rightRR}`;
 						}
 					});
 				});
@@ -491,20 +479,6 @@ const VideoFuc = ({ login, username }) => {
 								// }
 								localWrapper.insertBefore(vitalsDisplay, localWrapper.firstChild);
 							}
-
-							const heartRate = (vital.pulse != null && !isNaN(vital.pulse)) ?
-								`Heart Rate: ${vital.pulse} BPM` : 'Heart Rate: --';
-							const leftRR = (vital.left_rr != null && !isNaN(vital.left_rr)) ?
-								`Left Nostril RR: ${vital.left_rr}` : 'Left Nostril RR: --';
-							const rightRR = (vital.right_rr != null && !isNaN(vital.right_rr)) ?
-								`Right Nostril RR: ${vital.right_rr}` : 'Right Nostril RR: --';
-
-							vitalsDisplay.innerText = `${vital.username.charAt(0).toUpperCase() + vital.username.slice(1)}
-								${heartRate}
-								${leftRR}
-								${rightRR}`;
-
-
 						}
 					});
 				}
@@ -548,27 +522,27 @@ const VideoFuc = ({ login, username }) => {
 						}
 					}
 
-					connections[socketListId].ontrack = (event) => {
-						console.log(event);
-						const stream = event.streams[0];
-						console.log("event", event);
-						var searchVidep = document.querySelector(`[data-socket="${socketListId}"]`);
+					// Wait for their video stream
+					connections[socketListId].onaddstream = (event) => {
+						var searchVidep = document.querySelector(`[data-socket="${socketListId}"]`)
 						if (searchVidep !== null) {
-							searchVidep.srcObject = stream;
+							searchVidep.srcObject = event.stream
 						} else {
-							elms = clients.length;
-							let main = document.getElementById('main');
+							elms = clients.length
+							let main = document.getElementById('main')
 							let cssMesure = changeCssVideos({ main, elms });
-					
-							let videoWrapper = document.createElement('div');
-							let video = document.createElement('video');
-					
-							videoWrapper.id = socketListId;
-							videoWrapper.className = "videoWrapper";
-					
+
+							let videoWrapper = document.createElement('div')
+							let video = document.createElement('video')
+
+							videoWrapper.id = socketListId
+							videoWrapper.className = "videoWrapper"
+
 							const idDisplay = document.createElement('div');
+							// idDisplay.innerText = connectionsWithNames[socketListId];
+							// {username.charAt(0).toUpperCase() + username.slice(1)}
 							idDisplay.innerText = connectionsWithNames[socketListId].charAt(0).toUpperCase() + connectionsWithNames[socketListId].slice(1);
-					
+
 							videoWrapper.style.display = "flex";
 							videoWrapper.style.flexDirection = "column";
 							videoWrapper.style.justifyContent = "flex-start";
@@ -577,7 +551,8 @@ const VideoFuc = ({ login, username }) => {
 							videoWrapper.style.zIndex = "1";
 							videoWrapper.style.border = "2px solid white";
 							videoWrapper.style.borderRadius = "15px";
-					
+
+
 							idDisplay.style.position = "absolute";
 							idDisplay.style.top = "0px";
 							idDisplay.style.left = "0px";
@@ -591,7 +566,8 @@ const VideoFuc = ({ login, username }) => {
 							idDisplay.style.whiteSpace = "nowrap";
 							idDisplay.style.borderTopLeftRadius = "15px";
 							idDisplay.style.borderBottomRightRadius = "15px";
-					
+
+
 							let css = {
 								minWidth: cssMesure.minWidth,
 								minHeight: cssMesure.minHeight,
@@ -600,37 +576,41 @@ const VideoFuc = ({ login, username }) => {
 								borderStyle: "solid",
 								borderColor: "#bdbdbd",
 								objectFit: "fill"
-							};
-					
+							}
+
 							for (let prop in css) {
 								videoWrapper.style[prop] = css[prop];
 							}
-							videoWrapper.style.setProperty("width", cssMesure.width);
-							videoWrapper.style.setProperty("height", cssMesure.height);
-					
+							videoWrapper.style.setProperty("width", cssMesure.width)
+							videoWrapper.style.setProperty("height", cssMesure.height)
+
+							// for (let i in css) videos
+
 							video.style.width = "100%";
 							video.style.height = "100%";
 							video.style.objectFit = "fill";
-							video.className = `client-video-${socketListId}`;
-					
-							video.setAttribute('data-socket', socketListId);
-							video.autoplay = true;
-							video.playsInline = true;
-							video.setAttribute('webkit-playsinline', true);
-							video.setAttribute('controls', false);
-							video.controls = false;
-					
+							// add classname to video element
+							video.className = `client-video-${socketListId}`
+
+							video.setAttribute('data-socket', socketListId)
+							video.srcObject = event.stream
+							video.autoplay = true
+							video.playsinline = true
+
 							canvasArray.push({
 								username: connectionsWithNames[socketListId],
 								socketId: socketListId,
-								clstream: stream,
-								track: stream.getVideoTracks()[0]
+								clstream: connections[socketListId].getLocalStreams()[0],
+								track: connections[socketListId].getLocalStreams()[0].getVideoTracks()[0]
 							});
 							console.log("canvasArray", canvasArray);
-					
+
 							videoWrapper.appendChild(idDisplay);
-							videoWrapper.appendChild(video);
-					
+							videoWrapper.appendChild(video)
+
+							// make a canvas for the user and add it to the canvasArray
+
+							// Create and append the canvas element
 							let canvas = document.createElement('canvas');
 							canvas.width = video.videoWidth;
 							canvas.height = video.videoHeight;
@@ -645,21 +625,34 @@ const VideoFuc = ({ login, username }) => {
 							canvas.className = `client-canvas-${socketListId}`;
 							videoWrapper.appendChild(canvas);
 							console.log('videoWrapper', videoWrapper);
-							main.appendChild(videoWrapper);
-					
+							main.appendChild(videoWrapper)
+
 							setStream(canvasArray, streams);
 						}
-					};
+					}
+
+					// if the user switches the camera, then update the canvasArray and rerun the setStream function
+					connections[socketListId].ontrack = (event) => {
+						console.log("event", event);
+						if (event.track.kind === "video") {
+							for (let i = 0; i < canvasArray.length; i++) {
+								if (canvasArray[i].socketId === socketListId) {
+									canvasArray[i].clstream = event.streams[0];
+									canvasArray[i].track = event.track;
+									break;
+								}
+							}
+							setStream(canvasArray, streams);
+						}
+					}
 
 					// Add the local video stream
 					if (window.localStream !== undefined && window.localStream !== null) {
-						// connections[socketListId].addStream(window.localStream)
-						window.localStream.getTracks().forEach(track => connections[socketListId].addTrack(track, window.localStream));
+						connections[socketListId].addStream(window.localStream)
 					} else {
 						let blackSilence = (...args) => new MediaStream([black(...args), silence()])
 						window.localStream = blackSilence()
-						// connections[socketListId].addStream(window.localStream)
-						window.localStream.getTracks().forEach(track => connections[socketListId].addTrack(track, window.localStream));
+						connections[socketListId].addStream(window.localStream)
 					}
 
 
@@ -670,8 +663,7 @@ const VideoFuc = ({ login, username }) => {
 						if (id2 === socketId) continue
 
 						try {
-							// connections[id2].addStream(window.localStream)
-							window.localStream.getTracks().forEach(track => connections[id2].addTrack(track, window.localStream));
+							connections[id2].addStream(window.localStream)
 						} catch (e) { }
 
 						connections[id2].createOffer().then((description) => {
@@ -958,8 +950,6 @@ const VideoFuc = ({ login, username }) => {
 													ref={localVideoref}
 													autoPlay
 													muted
-													playsInline
-													controls={false}
 													style={{
 														objectFit: "fill",
 														width: "100%",

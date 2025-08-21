@@ -10,18 +10,16 @@
     { "username": "rahul", "password": "rahul" },
     { "username": "ravi", "password": "ravi" },
     { "username": "trupti ", "password": "trupti" },
+
     { "username": "doctor", "password": "doctor" },
     { "username": "p1_m", "password": "p1_m" },
     { "username": "p1_bed", "password": "p1_bed" },
-    { "username": "ankita", "password": "ankita" },
     { "username": "admin", "password": "123@admin" }
   ],
 
   "test1": [
     { "username": "anish", "password": "anish" },
     { "username": "tejas", "password": "tejas" },
-    { "username": "kaustubh", "password": "kaustubh" },
-    { "username": "bhumi", "password": "bhumi" },
     { "username": "admin", "password": "123@admin" },
     { "username": "ocr", "password": "ocr" },
     { "username": "doc", "password": "doc" },

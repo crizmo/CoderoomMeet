@@ -13,7 +13,7 @@ const changeCssVideos = ({ main, elms }) => {
     let width, height;
     
     if (elms === 0 || elms === 1) {
-        width = "80%";
+        width = "100%";
         height = "100%";
     } else if (elms === 2) {
         width = mobile ? "100%" : "45%";
@@ -48,33 +48,6 @@ const changeCssVideos = ({ main, elms }) => {
         localVideoWrapper[a].style.setProperty("width", width);
         localVideoWrapper[a].style.setProperty("height", height);
     }
-
-    // Add media queries for different screen sizes
-    const styleSheet = document.styleSheets[0];
-    styleSheet.insertRule(`
-        @media (max-width: 600px) {
-            .videoWrapper, .localVideoWrapper {
-                width: 100% !important;
-                height: auto !important;
-            }
-        }
-    `, styleSheet.cssRules.length);
-    styleSheet.insertRule(`
-        @media (min-width: 601px) and (max-width: 1024px) {
-            .videoWrapper, .localVideoWrapper {
-                width: 50% !important;
-                height: auto !important;
-            }
-        }
-    `, styleSheet.cssRules.length);
-    styleSheet.insertRule(`
-        @media (min-width: 1025px) {
-            .videoWrapper, .localVideoWrapper {
-                width: ${width} !important;
-                height: ${height} !important;
-            }
-        }
-    `, styleSheet.cssRules.length);
     
     return { minWidth, minHeight: minWidth * 9 / 16 + "px", width, height };
 };

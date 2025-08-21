@@ -117,8 +117,7 @@ export const getUserMediaSuccess = ({
     for (let id in connections) {
         if (id === socketId) continue
 
-        // connections[id].addStream(window.localStream)
-        window.localStream.getTracks().forEach(track => connections[id].addTrack(track, window.localStream));
+        connections[id].addStream(window.localStream)
 
         connections[id].createOffer()
             .then(description => {
@@ -145,9 +144,8 @@ export const getUserMediaSuccess = ({
                 localVideoref.current.srcObject = window.localStream
 
                 for (let id in connections) {
-                    // connections[id].addStream(window.localStream)
-                    window.localStream.getTracks().forEach(track => connections[id].addTrack(track, window.localStream));
-                    
+                    connections[id].addStream(window.localStream)
+
                     connections[id].createOffer().then((description) => {
                         connections[id].setLocalDescription(description)
                             .then(() => {

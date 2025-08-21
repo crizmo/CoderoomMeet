@@ -1,20 +1,23 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import {
-	TextField,
-	Button,
-	Box,
-	Typography,
-	Container,
-	Paper,
+import { 
+	TextField, 
+	Button, 
+	Box, 
+	Grid, 
+	Typography, 
+	Container, 
+	Paper, 
 	useMediaQuery,
-	ThemeProvider,
-	createTheme
+	ThemeProvider, 
+	createTheme 
 } from '@mui/material';
 import { blue, green } from '@mui/material/colors';
 import { useTheme } from '@mui/material/styles';
-import allowedRooms from '../components/allowedRooms.json';
+import allowedRooms from './allowedRooms.json';
+// import logoImage from '../assets/logo.jpg';
 import logoImage from '../assets/logo1.png';
 
+// Create a custom theme
 const theme = createTheme({
 	palette: {
 		primary: {
@@ -32,12 +35,10 @@ const theme = createTheme({
 const Home = ({ onLoginSet, onUsernameSet }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-	const [inputs, setInputs] = useState({
-		username: '',
-		password: '',
-		roomName: ''
-	});
+	
+	const [usernameInput, setUsernameInput] = useState('');
+	const [passwordInput, setPasswordInput] = useState('');
+	const [roomNameInput, setRoomNameInput] = useState('');
 
 	// Memoize allowedRooms to avoid recalculating on every render
 	const allowedRoomsInfo = useMemo(() => allowedRooms, []);
@@ -55,35 +56,48 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 		return false;
 	}, [allowedRoomsInfo, isAllowedRoom]);
 
-	const handleChange = useCallback((e) => {
-		const { name, value } = e.target;
-		setInputs((prev) => ({ ...prev, [name]: value }));
+	const handleChange = useCallback((e, field) => {
+		switch (field) {
+			case 'roomNameInput':
+				setRoomNameInput(e.target.value);
+				break;
+			case 'usernameInput':
+				setUsernameInput(e.target.value);
+				break;
+			case 'passwordInput':
+				setPasswordInput(e.target.value);
+				break;
+			default:
+				break;
+		}
 	}, []);
 
-	const handleJoin = useCallback((path) => {
-		const { roomName, username, password } = inputs;
+	const join = useCallback(() => {
+		const enteredRoom = roomNameInput.trim();
+		const enteredUsername = usernameInput.trim();
+		const enteredPassword = passwordInput.trim();
 
-		if (!roomName || !username || !password) {
+		if (!enteredRoom || !enteredUsername || !enteredPassword) {
 			alert('Please fill in all fields.');
 			return;
 		}
 
-		if (isAllowedRoom(roomName)) {
-			if (isValidCredentials(roomName, username, password)) {
+		if (isAllowedRoom(enteredRoom)) {
+			if (isValidCredentials(enteredRoom, enteredUsername, enteredPassword)) {
 				onLoginSet();
-				onUsernameSet(username);
-				window.location.href = `/#/${path}/${roomName}`;
+				onUsernameSet(enteredUsername);
+				window.location.href = `/#/${enteredRoom}`;
 			} else {
 				alert('Invalid username or password.');
 			}
 		} else {
 			alert('Error: Invalid room name or room not allowed. Contact admin.');
 		}
-	}, [inputs, isAllowedRoom, isValidCredentials, onLoginSet, onUsernameSet]);
+	}, [roomNameInput, usernameInput, passwordInput, isAllowedRoom, isValidCredentials, onLoginSet, onUsernameSet]);
 
 	return (
 		<ThemeProvider theme={theme}>
-			<Container
+			<Container 
 				maxWidth="xs"
 				sx={{
 					display: 'flex',
@@ -92,10 +106,11 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 					alignItems: 'center',
 					height: '100vh',
 					padding: isMobile ? theme.spacing(2) : theme.spacing(4),
+					backgroundColor: '#f0f2f5'
 				}}
 			>
-				<Paper
-					elevation={6}
+				<Paper 
+					elevation={6} 
 					sx={{
 						width: '100%',
 						maxWidth: isMobile ? '100%' : 400,
@@ -107,7 +122,8 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 						backgroundColor: 'white'
 					}}
 				>
-					<Box
+					{/* Logo and Title Section */}
+					<Box 
 						sx={{
 							display: 'flex',
 							flexDirection: 'column',
@@ -116,35 +132,46 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 							textAlign: 'center'
 						}}
 					>
-						<Typography
-							variant={isMobile ? "h5" : "h4"}
-							component="h1"
-							sx={{
-								fontWeight: 'bold',
+						<img 
+							src={logoImage} 
+							alt="Yoga Vigyan Logo" 
+							style={{
+								width: isMobile ? 150 : 200,
+								height: 'auto',
+								borderRadius: 10,
+								marginBottom: 16
+							}} 
+						/>
+						<Typography 
+							variant={isMobile ? "h5" : "h4"} 
+							component="h1" 
+							sx={{ 
+								fontWeight: 'bold', 
 								color: theme.palette.primary.main,
 								marginBottom: 1
 							}}
 						>
-							Coderoom
+							Powered by BHERI
 						</Typography>
-						<Typography
-							variant={isMobile ? "subtitle2" : "subtitle1"}
-							sx={{
-								textAlign: 'center',
+						<Typography 
+							variant={isMobile ? "subtitle2" : "subtitle1"} 
+							sx={{ 
+								textAlign: 'center', 
 								color: 'text.secondary',
 								fontWeight: 'bold',
 								px: 1
 							}}
 						>
-							Join a room to start your session
+							Sensor enabled Conferencing Platforms for Yoga, Dance, Skill Instructors
 						</Typography>
 					</Box>
 
-					<Box
-						component="form"
-						sx={{
-							width: '100%',
-							mt: 1
+					{/* Login Form */}
+					<Box 
+						component="form" 
+						sx={{ 
+							width: '100%', 
+							mt: 1 
 						}}
 					>
 						<TextField
@@ -153,9 +180,8 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 							required
 							fullWidth
 							label="Room Name"
-							name="roomName"
-							value={inputs.roomName}
-							onChange={handleChange}
+							value={roomNameInput}
+							onChange={(e) => handleChange(e, 'roomNameInput')}
 							InputProps={{
 								sx: { borderRadius: 2 }
 							}}
@@ -166,9 +192,8 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 							required
 							fullWidth
 							label="Username"
-							name="username"
-							value={inputs.username}
-							onChange={handleChange}
+							value={usernameInput}
+							onChange={(e) => handleChange(e, 'usernameInput')}
 							InputProps={{
 								sx: { borderRadius: 2 }
 							}}
@@ -180,58 +205,29 @@ const Home = ({ onLoginSet, onUsernameSet }) => {
 							fullWidth
 							label="Password"
 							type="password"
-							name="password"
-							value={inputs.password}
-							onChange={handleChange}
+							value={passwordInput}
+							onChange={(e) => handleChange(e, 'passwordInput')}
 							InputProps={{
 								sx: { borderRadius: 2 }
 							}}
 						/>
-						<Box
-							sx={{
-								display: 'flex',
-								flexDirection: 'column',
-								alignItems: 'center'
+						<Button
+							type="button"
+							fullWidth
+							variant="contained"
+							color="primary"
+							sx={{ 
+								mt: 3, 
+								mb: 2,
+								py: 1.5,
+								borderRadius: 2,
+								textTransform: 'none',
+								fontWeight: 'bold'
 							}}
+							onClick={join}
 						>
-							{/* 
-							DO NOT
-							<Button
-								type="button"
-								fullWidth
-								variant="contained"
-								color="primary"
-								sx={{
-									mt: 2,
-									mb: 2,
-									py: 1.5,
-									borderRadius: 2,
-									textTransform: 'none',
-									fontWeight: 'bold'
-								}}
-								onClick={() => handleJoin('device')}
-							>
-								Connect to Device
-							</Button> 
-							*/}
-							<Button
-								type="button"
-								fullWidth
-								variant="contained"
-								color="primary"
-								sx={{
-									mt: 2,
-									mb: 2,
-									py: 1.5,
-									borderRadius: 2,
-									textTransform: 'none',
-									fontWeight: 'bold'
-								}}
-								onClick={() => handleJoin('meet')}
-							>
-								Connect to Session
-							</Button>
-						</Box>
+							Connect to Session
+						</Button>
 					</Box>
 				</Paper>
 			</Container>
