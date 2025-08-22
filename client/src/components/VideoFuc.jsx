@@ -800,6 +800,7 @@ const VideoFuc = ({ login, username }) => {
 													<CenterFocusWeakIcon />
 												</IconButton>
 											)} */}
+											
 
 											<IconButton style={{ color: "white", margin: isMobile ? "5px 0" : "0 10px" }} onClick={handleOcr}>
 												<CenterFocusWeakIcon />
