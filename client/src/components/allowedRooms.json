@@ -34,6 +34,13 @@
     { "username": "ankita", "password": "ankita" },
     { "username": "student", "password": "student" },
     { "username": "instructor", "password": "instructor" }
+  ],
 
+  "vesit": [
+    { "username": "tejas", "password": "tejas" },
+    { "username": "kaustubh", "password": "kaustubh" },
+    { "username": "bhumi", "password": "bhumi" },
+    { "username": "admin", "password": "123@admin" },
+    { "username": "ocr", "password": "ocr" }
   ]
 }
